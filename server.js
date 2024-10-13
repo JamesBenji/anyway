@@ -17,7 +17,11 @@ app.prepare().then(() => {
   let onlineUsers = []; //optimize to db
 
   io.on("connection", (socket) => {
-    // console.log('> client connected');
+    /**
+     * client has socket while server has 'io' which manages socket connections (hence why it accepts a socket as a param).
+     * the server listens for connections and accepts each connection socket and handles all these instances uniquely.
+     * within the socket connection (io connection) listeners, each socket can set up listeners for itself that will be emitted by other sockets.
+     */
     socket.on("addNewUser", (clerkUser) => {
       if (
         clerkUser &&
@@ -31,6 +35,11 @@ app.prepare().then(() => {
         //   emit for to users after adding a new user
         io.emit("getUsers", onlineUsers);
       }
+    });
+
+    socket.on("disconnect", () => {
+      onlineUsers = onlineUsers.filter((user) => user.socketId !== socket.id);
+      io.emit("getUsers", onlineUsers);
     });
   });
 
